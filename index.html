@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Terminal</title>
+    
+    <link rel="manifest" href="manifest.json">
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -98,12 +101,11 @@
             background-color: var(--primary-color); color: var(--bg-color); text-shadow: none;
             padding: 5px 10px; margin: -15px -15px 15px -15px; text-align: center;
         }
-        .folder-list .folder { padding: 5px 10px; margin-bottom: 5px; border: 1px solid transparent; }
+        .folder-list .folder { padding: 5px 10px; margin-bottom: 5px; border: 1px solid transparent; cursor: pointer; }
         .folder-list .folder.selected { background-color: var(--primary-color); color: var(--bg-color); text-shadow: none; }
         #content-header { border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
         #content-body { white-space: pre-wrap; }
         
-        /* ИСПРАВЛЕНИЕ ЗДЕСЬ */
         .hidden { display: none !important; }
 
         @keyframes flicker {
@@ -134,7 +136,7 @@
                 <div id="content-header">ЗАГРУЗКА...</div>
                 <div id="content-body">
                     <p>ИСПОЛЬЗУЙТЕ [↑] И [↓] ДЛЯ НАВИГАЦИИ.</p>
-                    <p>НАЖМИТЕ [ENTER] ДЛЯ ВЫБОРА.</p>
+                    <p>НАЖМИТЕ [ENTER] ИЛИ КЛИКНИТЕ МЫШЬЮ ДЛЯ ВЫБОРА.</p>
                 </div>
             </div>
         </div>
@@ -169,6 +171,14 @@
             folderDiv.className = 'folder';
             folderDiv.textContent = item.title;
             folderDiv.dataset.index = index;
+
+            // Добавляем обработчик клика/касания для каждой папки
+            folderDiv.addEventListener('click', () => {
+                selectedIndex = index; // Обновляем выбранный индекс
+                updateSelection();     // Обновляем подсветку
+                displayContent();      // Отображаем контент
+            });
+
             folderListEl.appendChild(folderDiv);
         });
         updateSelection();
@@ -205,27 +215,43 @@
         switch(event.key) {
             case 'ArrowUp':
                 selectedIndex = (selectedIndex - 1 + terminalData.length) % terminalData.length;
-                updateSelection(); break;
+                updateSelection(); 
+                break;
             case 'ArrowDown':
                 selectedIndex = (selectedIndex + 1) % terminalData.length;
-                updateSelection(); break;
+                updateSelection(); 
+                break;
             case 'Enter':
-                displayContent(); break;
+                displayContent(); 
+                break;
         }
     }
 
     // --- ЛОГИКА ЗАПУСКА ---
-    // Устанавливаем таймер, который скроет экран загрузки и покажет терминал
-    const loadingTime = 3000; // 3000 мс = 3 секунды. Должно совпадать с анимацией.
+    const loadingTime = 3000; 
     const loadingScreen = document.getElementById('loading-screen');
     const mainTerminal = document.getElementById('main-terminal');
 
     setTimeout(() => {
-        loadingScreen.classList.add('hidden'); // Прячем загрузку
-        mainTerminal.classList.remove('hidden'); // Показываем терминал
-        initTerminal(); // Инициализируем логику терминала
+        loadingScreen.classList.add('hidden'); 
+        mainTerminal.classList.remove('hidden'); 
+        initTerminal(); 
     }, loadingTime);
-
 </script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(registration => {
+            console.log('Service Worker зарегистрирован успешно:', registration);
+          })
+          .catch(error => {
+            console.log('Ошибка регистрации Service Worker:', error);
+          });
+      });
+    }
+</script>
+
 </body>
 </html>
