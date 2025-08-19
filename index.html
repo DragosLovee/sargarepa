@@ -172,12 +172,19 @@
             folderDiv.textContent = item.title;
             folderDiv.dataset.index = index;
 
-            // Добавляем обработчик клика/касания для каждой папки
-            folderDiv.addEventListener('click', () => {
-                selectedIndex = index; // Обновляем выбранный индекс
-                updateSelection();     // Обновляем подсветку
-                displayContent();      // Отображаем контент
-            });
+            // Функция, которая будет вызываться при выборе папки
+            const selectFolder = (event) => {
+                // event.preventDefault() предотвращает "двойное срабатывание" 
+                // (когда после касания срабатывает еще и эмуляция клика)
+                event.preventDefault();
+                selectedIndex = index;
+                updateSelection();
+                displayContent();
+            };
+
+            // Назначаем обработчики и для клика мыши, и для касания
+            folderDiv.addEventListener('click', selectFolder);
+            folderDiv.addEventListener('touchstart', selectFolder); // ИСПРАВЛЕНИЕ ЗДЕСЬ
 
             folderListEl.appendChild(folderDiv);
         });
