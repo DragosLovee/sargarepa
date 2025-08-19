@@ -165,31 +165,38 @@
     const contentBodyEl = document.getElementById('content-body');
     let selectedIndex = 0;
 
+    // --- ПРОФЕССИОНАЛЬНАЯ РЕАЛИЗАЦИЯ ЧЕРЕЗ ДЕЛЕГИРОВАНИЕ ---
+
     function initTerminal() {
-        terminalData.forEach((item, index) => {
-            const folderDiv = document.createElement('div');
-            folderDiv.className = 'folder';
-            folderDiv.textContent = item.title;
-            folderDiv.dataset.index = index;
+        // 1. Генерируем HTML для папок
+        folderListEl.innerHTML = terminalData.map((item, index) => {
+            return `<div class="folder" data-index="${index}">${item.title}</div>`;
+        }).join('');
 
-            // Функция, которая будет вызываться при выборе папки
-            const selectFolder = (event) => {
-                // event.preventDefault() предотвращает "двойное срабатывание" 
-                // (когда после касания срабатывает еще и эмуляция клика)
-                event.preventDefault();
-                selectedIndex = index;
-                updateSelection();
-                displayContent();
-            };
-
-            // Назначаем обработчики и для клика мыши, и для касания
-            folderDiv.addEventListener('click', selectFolder);
-            folderDiv.addEventListener('touchstart', selectFolder); // ИСПРАВЛЕНИЕ ЗДЕСЬ
-
-            folderListEl.appendChild(folderDiv);
-        });
-        updateSelection();
+        // 2. Назначаем ОДИН обработчик на родительский контейнер
+        folderListEl.addEventListener('click', handleFolderInteraction);
+        
+        // 3. Добавляем поддержку клавиатуры
         window.addEventListener('keydown', handleKeydown);
+
+        // 4. Инициализируем начальное состояние
+        updateSelection();
+    }
+    
+    // Единый обработчик для кликов и касаний
+    function handleFolderInteraction(event) {
+        // Находим элемент с классом .folder, по которому кликнули
+        const folderEl = event.target.closest('.folder');
+
+        // Если клик был не по папке, ничего не делаем
+        if (!folderEl) return;
+
+        // Получаем индекс из data-атрибута
+        const index = parseInt(folderEl.dataset.index, 10);
+        
+        selectedIndex = index;
+        updateSelection();
+        displayContent();
     }
 
     function updateSelection() {
@@ -219,18 +226,19 @@
     }
 
     function handleKeydown(event) {
-        switch(event.key) {
-            case 'ArrowUp':
-                selectedIndex = (selectedIndex - 1 + terminalData.length) % terminalData.length;
-                updateSelection(); 
-                break;
-            case 'ArrowDown':
-                selectedIndex = (selectedIndex + 1) % terminalData.length;
-                updateSelection(); 
-                break;
-            case 'Enter':
-                displayContent(); 
-                break;
+        let newIndex = selectedIndex;
+        if (event.key === 'ArrowUp') {
+            newIndex = (selectedIndex - 1 + terminalData.length) % terminalData.length;
+        } else if (event.key === 'ArrowDown') {
+            newIndex = (selectedIndex + 1) % terminalData.length;
+        } else if (event.key === 'Enter') {
+            displayContent();
+            return; // Выходим, чтобы не обновлять подсветку зря
+        }
+
+        if (newIndex !== selectedIndex) {
+            selectedIndex = newIndex;
+            updateSelection();
         }
     }
 
